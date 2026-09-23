@@ -8,6 +8,7 @@ import urllib.error
 import urllib.request
 
 import chess
+from dotenv import load_dotenv
 
 from .game import COLORS, GameError
 
@@ -41,6 +42,7 @@ def request_body(game):
 
 
 def ask(body, key=None, attempts=4):
+    load_dotenv()
     data = json.dumps(body).encode()
     headers = {
         "Authorization": f"Bearer {key or os.environ['AI_GATEWAY_API_KEY']}",

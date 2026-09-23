@@ -3,7 +3,9 @@
 import threading
 from pathlib import Path
 
-from flask import Flask, jsonify, request, send_from_directory
+import chess
+import chess.svg
+from flask import Flask, Response, jsonify, request, send_from_directory
 
 from .game import COLORS, Game, GameError
 from .jev import choose_move
@@ -105,6 +107,14 @@ def create_app(records="results/games", choose_fn=None):
     @app.get("/api/games/<game_id>/replay")
     def replay(game_id):
         return jsonify(replay_record(store.data(find(game_id))))
+
+    @app.get("/pieces/<code>.svg")
+    def piece(code):
+        if len(code) != 2 or code[0] not in "wb" or code[1] not in "pnbrqk":
+            return "", 404
+        symbol = code[1].upper() if code[0] == "w" else code[1]
+        svg = chess.svg.piece(chess.Piece.from_symbol(symbol), size=100)
+        return Response(svg, mimetype="image/svg+xml")
 
     @app.get("/")
     def index():

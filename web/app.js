@@ -1,6 +1,6 @@
 const PIECES = {
-  P: "♙", N: "♘", B: "♗", R: "♖", Q: "♕", K: "♔",
-  p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚",
+  P: "wp", N: "wn", B: "wb", R: "wr", Q: "wq", K: "wk",
+  p: "bp", n: "bn", b: "bb", r: "br", q: "bq", k: "bk",
 };
 
 const boardElement = document.querySelector("#board");
@@ -64,7 +64,7 @@ function renderBoard() {
     if (piece) button.classList.add("occupied");
     if (square === checkedKing) button.classList.add("check");
     if (canInteract() && (legalFrom(square).length || targets.includes(square))) button.classList.add("selectable");
-    if (piece) button.innerHTML = `<span class="piece">${PIECES[piece]}</span>`;
+    if (piece) button.innerHTML = `<img class="piece" src="/pieces/${PIECES[piece]}.svg" alt="">`;
     if (index % 8 === 0) button.insertAdjacentHTML("beforeend", `<span class="coordinate">${square[1]}</span>`);
     button.addEventListener("click", () => clickSquare(square));
     boardElement.append(button);

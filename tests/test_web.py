@@ -115,3 +115,15 @@ def test_browser_page_and_assets_are_served(tmp_path):
     assert b'Play as White' in page.data
     assert css.status_code == 200
     assert script.status_code == 200
+
+
+def test_standard_piece_svg_is_served(tmp_path):
+    client = app_client(tmp_path)
+
+    piece = client.get("/pieces/wn.svg")
+    unknown = client.get("/pieces/wx.svg")
+
+    assert piece.status_code == 200
+    assert piece.content_type.startswith("image/svg+xml")
+    assert b"<svg" in piece.data
+    assert unknown.status_code == 404

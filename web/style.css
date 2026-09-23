@@ -1,14 +1,14 @@
 :root {
   color-scheme: light;
-  --ink: #181816;
-  --muted: #6f6d66;
-  --paper: #f4f2ec;
-  --panel: #ebe8df;
-  --line: #cac6bb;
-  --light-square: #ded8ca;
-  --dark-square: #78766d;
-  --accent: #9d4d38;
-  --selection: #cf8b4d;
+  --ink: #f1f1f1;
+  --muted: #aaa8a5;
+  --paper: #312e2b;
+  --panel: #262421;
+  --line: #4a4743;
+  --light-square: #eeeed2;
+  --dark-square: #769656;
+  --accent: #d46b58;
+  --selection: #f4d35e;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -25,7 +25,7 @@ body {
 button { font: inherit; }
 
 .shell {
-  width: min(1120px, calc(100% - 40px));
+  width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
   padding: 30px 0 48px;
 }
@@ -89,8 +89,10 @@ h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(1.8rem, 3vw, 2.5re
   grid-template-columns: repeat(8, 1fr);
   width: 100%;
   aspect-ratio: 1;
-  border: 1px solid #4d4c47;
-  box-shadow: 0 8px 24px rgba(31, 29, 24, 0.12);
+  border: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34);
   user-select: none;
 }
 
@@ -101,29 +103,26 @@ h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(1.8rem, 3vw, 2.5re
   min-width: 0;
   border: 0;
   padding: 0;
-  color: #171715;
+  color: #2c2b29;
   background: var(--light-square);
   cursor: default;
-  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", serif;
-  font-size: clamp(2rem, 7.1vw, 4.9rem);
   line-height: 1;
-  text-shadow: 0 1px 0 rgba(255,255,255,.25);
 }
 
 .square.dark { background: var(--dark-square); }
 .square.selectable { cursor: pointer; }
-.square.selected { box-shadow: inset 0 0 0 5px var(--selection); }
+.square.selected { box-shadow: inset 0 0 0 5px rgba(244, 211, 94, .9); }
 .square.last::after { content: ""; position: absolute; inset: 0; background: rgba(220, 170, 65, .28); pointer-events: none; }
 .square.target::before { content: ""; position: absolute; width: 22%; aspect-ratio: 1; border-radius: 50%; background: rgba(27, 27, 24, .35); z-index: 1; }
 .square.target.occupied::before { width: 78%; border: 4px solid rgba(27, 27, 24, .35); background: transparent; }
 .square.check { box-shadow: inset 0 0 0 6px var(--accent); }
-.square .piece { position: relative; z-index: 2; transform: translateY(-2%); }
+.square .piece { position: relative; z-index: 2; width: 90%; height: 90%; object-fit: contain; }
 .square .coordinate { position: absolute; z-index: 3; left: 5px; bottom: 3px; font: 600 10px/1 ui-sans-serif, system-ui; opacity: .66; }
 
 .status-line { display: flex; gap: 14px; align-items: baseline; min-height: 42px; }
 .status-line p { margin: 12px 0 0; color: var(--muted); font-size: .9rem; }
 
-.score-sheet { min-height: 360px; border-left: 1px solid var(--line); padding-left: 24px; }
+.score-sheet { min-height: 360px; padding: 16px 20px 18px; border-radius: 5px; background: var(--panel); box-shadow: 0 6px 18px rgba(0,0,0,.2); }
 .score-heading { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0 14px; border-bottom: 1px solid var(--line); }
 .score-heading h2 { margin: 0; font-family: Georgia, serif; font-size: 1.3rem; font-weight: 500; }
 .score-heading span { color: var(--muted); font-size: .78rem; }
@@ -135,7 +134,7 @@ h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(1.8rem, 3vw, 2.5re
   border: 1px solid var(--line);
   padding: 10px 14px;
   color: var(--ink);
-  background: transparent;
+  background: #3b3936;
   cursor: pointer;
 }
 .actions button:hover:not(:disabled), .color-choices button:hover, dialog button:hover { border-color: var(--ink); }
@@ -144,7 +143,7 @@ h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(1.8rem, 3vw, 2.5re
 .welcome { width: min(650px, 100%); margin: 13vh auto 0; text-align: center; }
 .welcome > p:first-child { font-family: Georgia, serif; font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1.45; }
 .color-choices { display: flex; justify-content: center; gap: 12px; margin: 28px 0 18px; }
-.color-choices button { min-width: 190px; padding: 16px 20px; background: var(--panel); }
+.color-choices button { min-width: 190px; padding: 16px 20px; background: #45423e; border-radius: 4px; }
 .piece-choice { margin-right: 9px; font-family: serif; font-size: 1.4rem; vertical-align: -2px; }
 .note { color: var(--muted); font-size: .8rem; }
 
@@ -156,9 +155,8 @@ dialog p { margin: 0 0 14px; font-family: Georgia, serif; font-size: 1.2rem; }
 @media (max-width: 780px) {
   .shell { width: min(100% - 20px, 620px); padding-top: 18px; }
   .game { grid-template-columns: 1fr; gap: 24px; padding-top: 14px; }
-  .score-sheet { border-left: 0; border-top: 1px solid var(--line); padding: 12px 0 0; min-height: 0; }
+  .score-sheet { padding: 14px 16px; min-height: 0; }
   #move-list { height: 190px; }
-  .square { font-size: clamp(2rem, 11vw, 4.6rem); }
 }
 
 @media (max-width: 470px) {
