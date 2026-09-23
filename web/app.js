@@ -66,7 +66,12 @@ function renderBoard() {
     if (canInteract() && (legalFrom(square).length || targets.includes(square))) button.classList.add("selectable");
     if (piece) button.innerHTML = `<img class="piece" src="/pieces/${PIECES[piece]}.svg" alt="">`;
     if (index % 8 === 0) button.insertAdjacentHTML("beforeend", `<span class="coordinate">${square[1]}</span>`);
+    button.draggable = Boolean(piece && canInteract() && legalFrom(square).length);
     button.addEventListener("click", () => clickSquare(square));
+    button.addEventListener("dragstart", event => startDrag(event, square));
+    button.addEventListener("dragover", event => dragOver(event, square));
+    button.addEventListener("drop", event => dropPiece(event, square));
+    button.addEventListener("dragend", endDrag);
     boardElement.append(button);
   });
 }
@@ -82,12 +87,17 @@ async function clickSquare(square) {
     renderBoard();
     return;
   }
-  const candidates = legalFrom(selected).filter(move => move.slice(2, 4) === square);
-  if (!candidates.length) {
+  if (!legalFrom(selected).some(move => move.slice(2, 4) === square)) {
     selected = legalFrom(square).length ? square : null;
     renderBoard();
     return;
   }
+  await movePiece(selected, square);
+}
+
+async function movePiece(from, to) {
+  const candidates = legalFrom(from).filter(move => move.slice(2, 4) === to);
+  if (!candidates.length) return;
   let move = candidates[0];
   if (candidates.length > 1) {
     const piece = await choosePromotion();
@@ -97,6 +107,38 @@ async function clickSquare(square) {
   selected = null;
   await send(`/api/games/${game.id}/moves`, {move, ply: game.moves.length});
   if (game && game.status === "playing" && game.turn === game.jev_color) await requestJev();
+}
+
+function startDrag(event, square) {
+  if (!canInteract() || !legalFrom(square).length) {
+    event.preventDefault();
+    return;
+  }
+  selected = square;
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", square);
+  event.currentTarget.classList.add("dragging", "selected");
+  for (const move of legalFrom(square)) {
+    boardElement.querySelector(`[data-square="${move.slice(2, 4)}"]`)?.classList.add("target");
+  }
+}
+
+function dragOver(event, square) {
+  if (selected && legalFrom(selected).some(move => move.slice(2, 4) === square)) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }
+}
+
+function dropPiece(event, square) {
+  event.preventDefault();
+  const from = event.dataTransfer.getData("text/plain") || selected;
+  movePiece(from, square);
+}
+
+function endDrag() {
+  selected = null;
+  renderBoard();
 }
 
 function choosePromotion() {
