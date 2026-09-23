@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jev Chess</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">Human versus Jev</p>
+        <h1>Jev Chess</h1>
+      </div>
+      <button class="text-button" id="new-game" type="button">New game</button>
+    </header>
+
+    <section class="game" id="game" hidden>
+      <div class="play-area">
+        <div class="player" id="top-player">
+          <span class="marker"></span><strong class="name"></strong>
+          <time class="clock">10:00</time>
+        </div>
+        <div class="board" id="board" role="grid" aria-label="Chess board"></div>
+        <div class="player" id="bottom-player">
+          <span class="marker"></span><strong class="name"></strong>
+          <time class="clock">10:00</time>
+        </div>
+        <div class="status-line">
+          <p id="status" aria-live="polite"></p>
+          <button class="text-button" id="retry" type="button" hidden>Try again</button>
+        </div>
+      </div>
+
+      <aside class="score-sheet">
+        <div class="score-heading">
+          <h2>Moves</h2>
+          <span id="game-state">In progress</span>
+        </div>
+        <ol id="move-list"></ol>
+        <div class="actions">
+          <button id="claim-draw" type="button" disabled>Claim draw</button>
+          <button id="resign" type="button">Resign</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="welcome" id="welcome">
+      <p>Play a complete game against Jev. Choose a side to begin.</p>
+      <div class="color-choices">
+        <button data-color="white" type="button"><span class="piece-choice">♙</span>Play as White</button>
+        <button data-color="black" type="button"><span class="piece-choice">♟</span>Play as Black</button>
+      </div>
+      <p class="note">Ten minutes. No increment.</p>
+    </section>
+  </main>
+
+  <dialog id="promotion">
+    <form method="dialog">
+      <p>Promote pawn to</p>
+      <div class="promotion-pieces">
+        <button value="q">Queen</button>
+        <button value="r">Rook</button>
+        <button value="b">Bishop</button>
+        <button value="n">Knight</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/app.js"></script>
+</body>
+</html>

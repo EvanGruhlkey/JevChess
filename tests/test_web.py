@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from jevchess.web import create_app
 
 
@@ -62,9 +64,10 @@ def test_jev_move_is_applied_once_and_saves_metadata(tmp_path):
     assert record["jev"] == [{"input_tokens": 19}]
 
 
-def test_jev_failure_does_not_change_the_game(tmp_path):
+@pytest.mark.parametrize("failure", [OSError("gateway unavailable"), KeyError("AI_GATEWAY_API_KEY")])
+def test_jev_failure_does_not_change_the_game(tmp_path, failure):
     def fail(game):
-        raise OSError("gateway unavailable")
+        raise failure
 
     client = app_client(tmp_path, fail)
     game = create_game(client)
@@ -98,3 +101,17 @@ def test_replay_endpoint_returns_verified_frames(tmp_path):
     assert response.status_code == 200
     assert [frame["move"] for frame in response.get_json()] == [None, "e2e4"]
 
+
+def test_browser_page_and_assets_are_served(tmp_path):
+    client = app_client(tmp_path)
+
+    page = client.get("/")
+    css = client.get("/style.css")
+    script = client.get("/app.js")
+
+    assert page.status_code == 200
+    assert b'id="board"' in page.data
+    assert b'id="move-list"' in page.data
+    assert b'Play as White' in page.data
+    assert css.status_code == 200
+    assert script.status_code == 200

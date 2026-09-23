@@ -78,7 +78,7 @@ def create_app(records="results/games", choose_fn=None):
                 raise GameError("It is not Jev's turn")
             try:
                 move, metadata = chooser(game)
-            except (GameError, OSError, TimeoutError) as error:
+            except (GameError, KeyError, OSError, TimeoutError) as error:
                 app.logger.warning("Jev move failed: %s", error)
                 return jsonify(error="Jev could not choose a move", retryable=True), 503
             game.play(move, "jev")
