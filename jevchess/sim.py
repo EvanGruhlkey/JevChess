@@ -6,7 +6,7 @@ import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
 from .game import COLORS, Game
-from .jev import evaluate_moves
+from .jev import ask_parallel, evaluate_moves
 from .records import RecordStore
 
 
@@ -31,7 +31,7 @@ def sample_move(probabilities, legal_moves, rng):
 
 
 def choose_sampled_move(game, rng):
-    probabilities, metadata = evaluate_moves(game)
+    probabilities, metadata = evaluate_moves(game, ask_fn=ask_parallel)
     move = sample_move(probabilities, game.state()["legal_moves"], rng)
     metadata = {**metadata, "probabilities": probabilities}
     return move, metadata
