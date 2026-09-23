@@ -99,7 +99,7 @@ def request_body(game):
     }
 
 
-def ask(body, key=None, attempts=4):
+def ask(body, key=None, attempts=12):
     load_dotenv()
     data = json.dumps(body).encode()
     headers = {

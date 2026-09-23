@@ -42,17 +42,23 @@ def main():
     parser.add_argument("--output", default="results/stockfish-benchmark.json")
     args = parser.parse_args()
     store = RecordStore()
-    results = []
+    output = Path(args.output)
+    results = json.loads(output.read_text(encoding="utf-8")) if output.exists() else []
+    completed = {(row["elo"], row["jev_color"]) for row in results}
     engine = chess.engine.SimpleEngine.popen_uci(args.engine)
     try:
         for elo in map(int, args.elos.split(",")):
             for color in ("white", "black"):
+                if (elo, color) in completed:
+                    continue
                 row = play_game(engine, elo, color, store)
                 results.append(row)
                 print(json.dumps(row), flush=True)
+                output.parent.mkdir(parents=True, exist_ok=True)
+                output.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     finally:
         engine.quit()
-    Path(args.output).write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    output.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
