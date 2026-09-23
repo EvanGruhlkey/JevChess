@@ -142,6 +142,7 @@ def test_browser_page_and_assets_are_served(tmp_path):
     assert script.status_code == 200
     assert b'game.mode === "jev-vs-jev"' in script.data
     assert b"runNumber" in script.data
+    assert b"const SPECTATOR_DELAY_MS = 50" in script.data
 
 
 def test_standard_piece_svg_is_served(tmp_path):

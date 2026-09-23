@@ -2,6 +2,7 @@ const PIECES = {
   P: "wp", N: "wn", B: "wb", R: "wr", Q: "wq", K: "wk",
   p: "bp", n: "bn", b: "bb", r: "br", q: "bq", k: "bk",
 };
+const SPECTATOR_DELAY_MS = 50;
 
 const boardElement = document.querySelector("#board");
 const gameElement = document.querySelector("#game");
@@ -202,7 +203,7 @@ async function requestJev(run = runNumber) {
     busy = false;
     render();
     if (!jevError && game.mode === "jev-vs-jev" && game.status === "playing") {
-      setTimeout(() => requestJev(run), 450);
+      setTimeout(() => requestJev(run), SPECTATOR_DELAY_MS);
     }
   }
 }
