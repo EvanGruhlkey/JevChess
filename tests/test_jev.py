@@ -101,4 +101,7 @@ def test_gateway_retries_transient_error(monkeypatch):
 
     assert result["answers"]["move"]["choice"] == "e7e5"
     assert len(attempts) == 2
+    assert attempts[0].full_url == "https://ai-gateway.vercel.sh/v1/evaluate"
+    assert json.loads(attempts[0].data)["model"] == "typesafe-ai/jev"
     assert attempts[0].headers["Authorization"] == "Bearer secret"
+    assert "Ai-gateway-protocol-version" not in attempts[0].headers

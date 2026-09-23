@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from .game import COLORS, GameError
 
 
-URL = "https://ai-gateway.vercel.sh/v4/ai/evaluation-model"
+URL = "https://ai-gateway.vercel.sh/v1/evaluate"
 def request_body(game):
     legal_moves = [move.uci() for move in game.board.legal_moves]
     return {
@@ -32,13 +32,10 @@ def request_body(game):
 
 def ask(body, key=None, attempts=12):
     load_dotenv()
-    data = json.dumps(body).encode()
+    data = json.dumps({"model": "typesafe-ai/jev", **body}).encode()
     headers = {
         "Authorization": f"Bearer {key or os.environ['AI_GATEWAY_API_KEY']}",
         "content-type": "application/json",
-        "ai-gateway-protocol-version": "0.0.1",
-        "ai-evaluation-model-specification-version": "4",
-        "ai-model-id": "typesafe-ai/jev",
     }
     for attempt in range(attempts):
         try:
