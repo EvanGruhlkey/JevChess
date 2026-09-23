@@ -51,8 +51,9 @@ def ask(body, key=None, attempts=12):
     raise RuntimeError("Jev request did not complete")
 
 
-def choose_move(game, key=None, ask_fn=ask):
-    legal = set(game.state()["legal_moves"])
+def evaluate_moves(game, key=None, ask_fn=ask):
+    legal = game.state()["legal_moves"]
+    legal_set = set(legal)
     if not legal:
         raise GameError("Jev has no legal move")
     result = ask_fn(request_body(game), key=key)
@@ -60,10 +61,24 @@ def choose_move(game, key=None, ask_fn=ask):
         answer = result["answers"]["move"]
     except (KeyError, TypeError) as error:
         raise GameError("Jev did not return a legal move") from error
-    probabilities = answer.get("probabilities") or {}
-    ranked = [(float(score), move) for move, score in probabilities.items() if move in legal]
-    move = max(ranked)[1] if ranked else answer.get("choice")
-    if move not in legal:
+    probabilities = {}
+    for move, score in (answer.get("probabilities") or {}).items():
+        if move not in legal_set:
+            continue
+        try:
+            probabilities[move] = float(score)
+        except (TypeError, ValueError):
+            continue
+    choice = answer.get("choice")
+    if not probabilities and choice in legal_set:
+        probabilities[choice] = 1.0
+    if not probabilities:
         raise GameError("Jev did not return a legal move")
     usage = result.get("usage") or {}
-    return move, {"input_tokens": int(usage.get("inputTokens", 0))}
+    return probabilities, {"input_tokens": int(usage.get("inputTokens", 0))}
+
+
+def choose_move(game, key=None, ask_fn=ask):
+    probabilities, metadata = evaluate_moves(game, key=key, ask_fn=ask_fn)
+    move = max(probabilities, key=probabilities.get)
+    return move, metadata
