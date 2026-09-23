@@ -23,7 +23,7 @@ class RecordStore:
             "created_at": game.created_at,
             "initial_fen": game.initial_fen,
             "time_control": game.time_control,
-            "players": {game.human_color: "Human", game.jev_color: "Jev"},
+            "players": dict(game.players),
             "moves": list(game.moves),
             "clock_history": list(game.clock_history),
             "jev": list(game.jev_metadata),
@@ -52,8 +52,8 @@ class RecordStore:
         record.headers["Site"] = "Local"
         record.headers["Date"] = datetime.fromisoformat(game.created_at).strftime("%Y.%m.%d")
         record.headers["Round"] = "-"
-        record.headers["White"] = "Human" if game.human_color == "white" else "Jev"
-        record.headers["Black"] = "Human" if game.human_color == "black" else "Jev"
+        record.headers["White"] = game.players["white"]
+        record.headers["Black"] = game.players["black"]
         record.headers["Result"] = game.result or "*"
         record.headers["GameId"] = game.id
         record.headers["TimeControl"] = str(game.time_control)

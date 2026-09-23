@@ -16,7 +16,7 @@ class GameError(ValueError):
 
 
 class Game:
-    def __init__(self, human_color, seconds=600, fen=chess.STARTING_FEN, now=time.monotonic):
+    def __init__(self, human_color, seconds=600, fen=chess.STARTING_FEN, now=time.monotonic, players=None):
         if human_color not in COLOR_VALUES:
             raise GameError("Color must be white or black")
         self.board = chess.Board(fen)
@@ -25,6 +25,7 @@ class Game:
         self.initial_fen = fen
         self.human_color = human_color
         self.jev_color = COLORS[not COLOR_VALUES[human_color]]
+        self.players = players or {self.human_color: "Human", self.jev_color: "Jev"}
         self.moves = []
         self.clock_history = []
         self.jev_metadata = []

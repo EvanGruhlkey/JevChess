@@ -46,6 +46,14 @@ def test_finish_writes_standard_pgn(tmp_path):
     assert "1. f3 e5 2. g4 Qh4# 0-1" in pgn
 
 
+def test_record_uses_custom_player_names(tmp_path):
+    game = Game("white", players={"white": "Stockfish 1700", "black": "Jev"})
+
+    data = RecordStore(tmp_path).data(game)
+
+    assert data["players"] == {"white": "Stockfish 1700", "black": "Jev"}
+
+
 def test_replay_reconstructs_every_exact_position(tmp_path):
     store = RecordStore(tmp_path)
     game = Game("white")
