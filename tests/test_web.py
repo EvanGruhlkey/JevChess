@@ -135,9 +135,13 @@ def test_browser_page_and_assets_are_served(tmp_path):
     assert b'id="board"' in page.data
     assert b'id="move-list"' in page.data
     assert b'>White</button>' in page.data
+    assert b'data-mode="jev-vs-jev"' in page.data
+    assert b'>Jev vs Jev</button>' in page.data
     assert b'/pieces/bk.svg' in page.data
     assert css.status_code == 200
     assert script.status_code == 200
+    assert b'game.mode === "jev-vs-jev"' in script.data
+    assert b"runNumber" in script.data
 
 
 def test_standard_piece_svg_is_served(tmp_path):

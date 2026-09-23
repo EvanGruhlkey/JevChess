@@ -14,6 +14,7 @@ let selected = null;
 let busy = false;
 let receivedAt = 0;
 let jevError = null;
+let runNumber = 0;
 
 function positionFromFen(fen) {
   const position = {};
@@ -32,8 +33,9 @@ function positionFromFen(fen) {
 }
 
 function squares() {
-  const files = game.human_color === "white" ? [..."abcdefgh"] : [..."hgfedcba"];
-  const ranks = game.human_color === "white" ? [8,7,6,5,4,3,2,1] : [1,2,3,4,5,6,7,8];
+  const whiteOrientation = game.human_color !== "black";
+  const files = whiteOrientation ? [..."abcdefgh"] : [..."hgfedcba"];
+  const ranks = whiteOrientation ? [8,7,6,5,4,3,2,1] : [1,2,3,4,5,6,7,8];
   return ranks.flatMap(rank => files.map(file => `${file}${rank}`));
 }
 
@@ -179,20 +181,29 @@ async function send(path, body) {
   }
 }
 
-async function requestJev() {
+async function requestJev(run = runNumber) {
+  if (!game || run !== runNumber) return;
+  const gameId = game.id;
   busy = true;
   retryButton.hidden = true;
   render();
   try {
-    game = await api(`/api/games/${game.id}/jev`, {method: "POST", body: {ply: game.moves.length}});
+    const next = await api(`/api/games/${gameId}/jev`, {method: "POST", body: {ply: game.moves.length}});
+    if (run !== runNumber) return;
+    game = next;
     receivedAt = performance.now();
     jevError = null;
   } catch (error) {
+    if (run !== runNumber) return;
     jevError = error.message;
     retryButton.hidden = false;
   } finally {
+    if (run !== runNumber) return;
     busy = false;
     render();
+    if (!jevError && game.mode === "jev-vs-jev" && game.status === "playing") {
+      setTimeout(() => requestJev(run), 450);
+    }
   }
 }
 
@@ -220,12 +231,13 @@ function currentClock(color) {
 }
 
 function renderPlayers() {
-  const topColor = game.human_color === "white" ? "black" : "white";
-  const bottomColor = game.human_color;
+  const spectator = game.mode === "jev-vs-jev";
+  const topColor = spectator ? "black" : (game.human_color === "white" ? "black" : "white");
+  const bottomColor = spectator ? "white" : game.human_color;
   [["#top-player", topColor], ["#bottom-player", bottomColor]].forEach(([selector, color]) => {
     const element = document.querySelector(selector);
     const seconds = currentClock(color);
-    element.querySelector(".name").textContent = color === game.human_color ? "You" : "Jev";
+    element.querySelector(".name").textContent = spectator ? `${color === "white" ? "White" : "Black"} Jev` : (color === game.human_color ? "You" : "Jev");
     element.querySelector(".clock").textContent = formatClock(seconds);
     element.querySelector(".clock").classList.toggle("low", seconds < 30);
     element.classList.toggle("active", game.status === "playing" && game.turn === color);
@@ -244,9 +256,12 @@ function renderMoves() {
 }
 
 function renderStatus() {
+  const spectator = game.mode === "jev-vs-jev";
   let status;
   if (jevError) status = jevError;
   else if (game.status === "finished") status = `${game.result} — ${game.termination}`;
+  else if (spectator && busy) status = `${game.turn === "white" ? "White" : "Black"} Jev is thinking`;
+  else if (spectator) status = `${game.turn === "white" ? "White" : "Black"} Jev to move`;
   else if (busy && game.turn === game.jev_color) status = "Jev is thinking";
   else if (game.turn === game.human_color) status = game.in_check ? "Your king is in check" : "Your move";
   else status = "Jev to move";
@@ -254,6 +269,7 @@ function renderStatus() {
   document.querySelector("#game-state").textContent = game.status === "finished" ? game.result : "In progress";
   document.querySelector("#claim-draw").disabled = busy || !game.can_claim_draw || game.turn !== game.human_color;
   document.querySelector("#resign").disabled = busy || game.status === "finished";
+  document.querySelector(".actions").hidden = spectator;
 }
 
 function render() {
@@ -264,23 +280,26 @@ function render() {
   renderStatus();
 }
 
-async function start(color) {
+async function start(color, mode) {
+  const run = ++runNumber;
   busy = true;
-  game = await api("/api/games", {method: "POST", body: {color}});
+  game = await api("/api/games", {method: "POST", body: mode ? {mode} : {color}});
   receivedAt = performance.now();
   jevError = null;
   welcomeElement.hidden = true;
   gameElement.hidden = false;
   busy = false;
   render();
-  if (game.turn === game.jev_color) await requestJev();
+  if (game.mode === "jev-vs-jev" || game.turn === game.jev_color) await requestJev(run);
 }
 
-document.querySelectorAll("[data-color]").forEach(button => button.addEventListener("click", () => start(button.dataset.color)));
+document.querySelectorAll("[data-color], [data-mode]").forEach(button => button.addEventListener("click", () => start(button.dataset.color, button.dataset.mode)));
 document.querySelector("#new-game").addEventListener("click", () => {
+  runNumber += 1;
   game = null;
   selected = null;
   jevError = null;
+  busy = false;
   gameElement.hidden = true;
   welcomeElement.hidden = false;
 });

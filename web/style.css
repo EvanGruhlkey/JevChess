@@ -148,6 +148,9 @@ h1 { margin: 0; font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 700; letter-
 .color-choices { display: flex; justify-content: center; gap: 12px; margin: 28px 0 18px; }
 .color-choices button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 150px; padding: 12px 18px; background: #45423e; border-radius: 4px; }
 .color-choices img { width: 34px; height: 34px; }
+.versus-pieces { display: inline-flex; align-items: center; }
+.versus-pieces img + img { margin-left: -12px; }
+.actions[hidden] { display: none; }
 .note { color: var(--muted); font-size: .8rem; }
 
 dialog { border: 1px solid var(--line); padding: 22px; background: var(--paper); color: var(--ink); }
