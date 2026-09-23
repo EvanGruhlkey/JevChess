@@ -29,10 +29,19 @@ The browser never decides whether a move is legal. The same game, Jev client and
 
 ## Results
 
-No completed games are published yet. Run games, then build a summary from the records that actually exist:
+Jev played two games against each Elo-limited Stockfish 19 opponent, once with each color. Stockfish used 0.1 seconds per move. Every game ended by checkmate.
+
+| Stockfish Elo | Jev wins | Stockfish wins | Game lengths |
+| ---: | ---: | ---: | --- |
+| 1350 | 0 | 2 | 44, 59 plies |
+| 1700 | 0 | 2 | 82, 39 plies |
+| 2100 | 0 | 2 | 56, 45 plies |
+| 2500 | 0 | 2 | 54, 53 plies |
+
+This small run shows Jev below the tested 1350 setting; it is not enough games to assign a precise rating. The complete benchmark summary is in [`results/stockfish-benchmark.json`](results/stockfish-benchmark.json). Run another matrix with:
 
 ```bash
-python scripts/export_results.py
+python scripts/benchmark.py path/to/stockfish
 ```
 
 ## Demo

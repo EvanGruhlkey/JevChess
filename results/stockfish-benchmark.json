@@ -6,5 +6,61 @@
     "result": "0-1",
     "termination": "checkmate",
     "plies": 44
+  },
+  {
+    "id": "54450c7902d3454ca9e6698fbd554d46",
+    "elo": 1350,
+    "jev_color": "black",
+    "result": "1-0",
+    "termination": "checkmate",
+    "plies": 59
+  },
+  {
+    "id": "838beb3ae114480eb52e654f73468a49",
+    "elo": 1700,
+    "jev_color": "white",
+    "result": "0-1",
+    "termination": "checkmate",
+    "plies": 82
+  },
+  {
+    "id": "1b0254171a1b436fbbeecc5edcd139e8",
+    "elo": 1700,
+    "jev_color": "black",
+    "result": "1-0",
+    "termination": "checkmate",
+    "plies": 39
+  },
+  {
+    "id": "25666c18ad99405c9217ed562491d056",
+    "elo": 2100,
+    "jev_color": "white",
+    "result": "0-1",
+    "termination": "checkmate",
+    "plies": 56
+  },
+  {
+    "id": "8419472ac66f48a0a26785a05dd2100a",
+    "elo": 2100,
+    "jev_color": "black",
+    "result": "1-0",
+    "termination": "checkmate",
+    "plies": 45
+  },
+  {
+    "id": "c099d93170e540268e59ae1566f72df2",
+    "elo": 2500,
+    "jev_color": "white",
+    "result": "0-1",
+    "termination": "checkmate",
+    "plies": 54
+  },
+  {
+    "id": "a295b9531f6647bd99449ae30b1ba19b",
+    "elo": 2500,
+    "jev_color": "black",
+    "result": "1-0",
+    "termination": "checkmate",
+    "plies": 53
   }
 ]
