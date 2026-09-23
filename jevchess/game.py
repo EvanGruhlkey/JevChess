@@ -109,6 +109,7 @@ class Game:
         self._settle_clock()
         turn = COLORS[self.board.turn]
         return {
+            "id": self.id,
             "fen": self.board.fen(),
             "turn": turn,
             "human_color": self.human_color,
