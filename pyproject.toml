@@ -17,7 +17,9 @@ test = ["pytest>=8,<9"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore:'asyncio.DefaultEventLoopPolicy' is deprecated:DeprecationWarning",
+]
 
 [tool.setuptools]
 packages = ["jevchess"]
-

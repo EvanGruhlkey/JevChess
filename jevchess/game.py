@@ -1,6 +1,8 @@
 """Authoritative chess state shared by the terminal and browser games."""
 
 import time
+import uuid
+from datetime import datetime, timezone
 
 import chess
 
@@ -18,10 +20,14 @@ class Game:
         if human_color not in COLOR_VALUES:
             raise GameError("Color must be white or black")
         self.board = chess.Board(fen)
+        self.id = uuid.uuid4().hex
+        self.created_at = datetime.now(timezone.utc).isoformat()
         self.initial_fen = fen
         self.human_color = human_color
         self.jev_color = COLORS[not COLOR_VALUES[human_color]]
         self.moves = []
+        self.clock_history = []
+        self.jev_metadata = []
         self.clocks = {"white": float(seconds), "black": float(seconds)}
         self.time_control = int(seconds)
         self.result = None
@@ -74,6 +80,7 @@ class Game:
         san = self.board.san(move)
         self.board.push(move)
         self.moves.append({"uci": move.uci(), "san": san})
+        self.clock_history.append({color: round(value, 3) for color, value in self.clocks.items()})
         self._finish_from_board()
         return self.state()
 
