@@ -12,7 +12,7 @@ from .jev import choose_move
 from .records import RecordStore, replay_record
 
 
-def create_app(records="results/games", choose_fn=None):
+def create_app(records="results/games", choose_fn=None, game_factory=Game):
     static = Path(__file__).resolve().parents[1] / "web"
     app = Flask(__name__, static_folder=None)
     store = RecordStore(records)
@@ -48,7 +48,7 @@ def create_app(records="results/games", choose_fn=None):
     def new_game():
         color = body().get("color", "white")
         try:
-            game = Game(color)
+            game = game_factory(color)
         except GameError as error:
             return jsonify(error=str(error)), 400
         games[game.id] = game
@@ -58,7 +58,11 @@ def create_app(records="results/games", choose_fn=None):
 
     @app.get("/api/games/<game_id>")
     def game_state(game_id):
-        return jsonify(find(game_id).state())
+        game = find(game_id)
+        state = game.state()
+        if game.status == "finished":
+            save(game)
+        return jsonify(state)
 
     @app.post("/api/games/<game_id>/moves")
     def human_move(game_id):

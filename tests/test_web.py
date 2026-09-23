@@ -2,11 +2,12 @@ import json
 
 import pytest
 
+from jevchess.game import Game
 from jevchess.web import create_app
 
 
-def app_client(tmp_path, choose_fn=None):
-    app = create_app(tmp_path, choose_fn=choose_fn)
+def app_client(tmp_path, choose_fn=None, game_factory=Game):
+    app = create_app(tmp_path, choose_fn=choose_fn, game_factory=game_factory)
     app.config.update(TESTING=True)
     return app.test_client()
 
@@ -127,3 +128,18 @@ def test_standard_piece_svg_is_served(tmp_path):
     assert piece.content_type.startswith("image/svg+xml")
     assert b"<svg" in piece.data
     assert unknown.status_code == 404
+
+
+def test_state_request_finalizes_a_clock_expiry(tmp_path):
+    now = [100.0]
+    client = app_client(
+        tmp_path,
+        game_factory=lambda color: Game(color, seconds=1, now=lambda: now[0]),
+    )
+    game = create_game(client)
+    now[0] += 2
+
+    state = client.get(f"/api/games/{game['id']}").get_json()
+
+    assert state["termination"] == "time forfeit"
+    assert (tmp_path / f"{game['id']}.pgn").exists()

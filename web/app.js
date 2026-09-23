@@ -154,6 +154,18 @@ async function requestJev() {
   }
 }
 
+async function refreshGame() {
+  if (!game || busy) return;
+  busy = true;
+  try {
+    game = await api(`/api/games/${game.id}`);
+    receivedAt = performance.now();
+  } finally {
+    busy = false;
+    render();
+  }
+}
+
 function formatClock(seconds) {
   const safe = Math.max(0, Math.ceil(seconds));
   return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
@@ -236,4 +248,8 @@ document.querySelector("#resign").addEventListener("click", async () => {
 document.querySelector("#claim-draw").addEventListener("click", () => send(`/api/games/${game.id}/draw`, {}));
 retryButton.addEventListener("click", requestJev);
 
-setInterval(() => { if (game) renderPlayers(); }, 250);
+setInterval(() => {
+  if (!game) return;
+  renderPlayers();
+  if (game.status === "playing" && currentClock(game.turn) === 0) refreshGame();
+}, 250);
