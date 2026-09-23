@@ -1,0 +1,1 @@
+"""Play chess against Jev."""
