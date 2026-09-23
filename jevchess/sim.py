@@ -3,10 +3,9 @@
 import math
 import random
 import time
-from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
 from .game import COLORS, Game
-from .jev import ask_parallel, evaluate_moves
+from .jev import ask, legal_probabilities
 from .records import RecordStore
 
 
@@ -30,14 +29,38 @@ def sample_move(probabilities, legal_moves, rng):
     return weighted[-1][0]
 
 
-def choose_sampled_move(game, rng):
-    probabilities, metadata = evaluate_moves(game, ask_fn=ask_parallel)
-    move = sample_move(probabilities, game.state()["legal_moves"], rng)
-    metadata = {**metadata, "probabilities": probabilities}
-    return move, metadata
+def choose_sampled_moves(games, randoms, ask_fn=ask):
+    state = {str(seed): {"fen": game.board.fen(), "side_to_move": COLORS[game.board.turn]}
+             for seed, game in games.items()}
+    questions = {}
+    legal_by_seed = {}
+    for seed, game in games.items():
+        legal = game.state()["legal_moves"]
+        legal_by_seed[seed] = legal
+        questions[f"game_{seed}"] = {
+            "type": "choice",
+            "instructions": f"Choose the strongest move for game {seed} using state.games.{seed}.",
+            "criteria": {move: move for move in legal},
+        }
+    result = ask_fn({"state": {"games": state}, "questions": questions})
+    usage = result.get("usage") or {}
+    input_tokens = int(usage.get("inputTokens", 0))
+    choices = {}
+    try:
+        answers = result["answers"]
+        for seed in games:
+            probabilities = legal_probabilities(answers[f"game_{seed}"], legal_by_seed[seed])
+            move = sample_move(probabilities, legal_by_seed[seed], randoms[seed])
+            choices[seed] = (move, {
+                "input_tokens": round(input_tokens / len(games)),
+                "probabilities": probabilities,
+            })
+    except (KeyError, TypeError) as error:
+        raise ValueError("Jev did not answer every simulated game") from error
+    return choices
 
 
-def run_matches(count=16, workers=6, max_plies=160, store=None, chooser=choose_sampled_move,
+def run_matches(count=16, max_plies=160, store=None, chooser=choose_sampled_moves,
                 seeds=None, progress=None):
     store = store or RecordStore("results/jev-vs-jev-games")
     seeds = list(range(count)) if seeds is None else list(seeds)
@@ -50,33 +73,32 @@ def run_matches(count=16, workers=6, max_plies=160, store=None, chooser=choose_s
         store.save(game)
 
     rows = []
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        pending = {pool.submit(chooser, games[seed], randoms[seed]): seed for seed in seeds}
-        while pending:
-            done, _ = wait(pending, return_when=FIRST_COMPLETED)
-            for future in done:
-                seed = pending.pop(future)
-                game = games[seed]
-                move, metadata = future.result()
-                color = COLORS[game.board.turn]
-                game.play(move, f"jev-{color}")
-                game.jev_metadata.append(metadata)
-                store.save(game)
-                if game.status == "playing" and len(game.moves) < max_plies:
-                    pending[pool.submit(chooser, game, randoms[seed])] = seed
-                    continue
-                if game.status == "playing":
-                    game.result = "1/2-1/2"
-                    game.termination = f"{max_plies}-ply limit"
-                store.finish(game)
-                row = {
-                    "id": game.id,
-                    "seed": seed,
-                    "result": game.result,
-                    "termination": game.termination,
-                    "plies": len(game.moves),
-                }
-                rows.append(row)
-                if progress:
-                    progress(len(rows), count, row, time.perf_counter() - started)
+    active = dict(games)
+    while active:
+        choices = chooser(active, randoms)
+        if set(choices) != set(active):
+            raise ValueError("Chooser must answer every active game")
+        for seed, game in list(active.items()):
+            move, metadata = choices[seed]
+            color = COLORS[game.board.turn]
+            game.play(move, f"jev-{color}")
+            game.jev_metadata.append(metadata)
+            store.save(game)
+            if game.status == "playing" and len(game.moves) < max_plies:
+                continue
+            if game.status == "playing":
+                game.result = "1/2-1/2"
+                game.termination = f"{max_plies}-ply limit"
+            store.finish(game)
+            row = {
+                "id": game.id,
+                "seed": seed,
+                "result": game.result,
+                "termination": game.termination,
+                "plies": len(game.moves),
+            }
+            rows.append(row)
+            del active[seed]
+            if progress:
+                progress(len(rows), count, row, time.perf_counter() - started)
     return sorted(rows, key=lambda row: row["seed"])

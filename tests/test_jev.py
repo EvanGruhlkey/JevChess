@@ -5,7 +5,7 @@ import urllib.error
 import pytest
 
 from jevchess.game import Game, GameError
-from jevchess.jev import ask, ask_parallel, choose_move, request_body
+from jevchess.jev import ask, choose_move, request_body
 
 
 def jev_turn():
@@ -105,41 +105,3 @@ def test_gateway_retries_transient_error(monkeypatch):
     assert json.loads(attempts[0].data)["model"] == "typesafe-ai/jev"
     assert attempts[0].headers["Authorization"] == "Bearer secret"
     assert "Ai-gateway-protocol-version" not in attempts[0].headers
-
-
-def test_parallel_gateway_uses_v4_protocol_and_gates_retries(monkeypatch):
-    attempts = []
-
-    class Gate:
-        def __init__(self):
-            self.calls = 0
-
-        def wait(self):
-            self.calls += 1
-
-    class Response:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            return False
-
-        def read(self):
-            return json.dumps({"answers": {"move": {"choice": "e7e5"}}}).encode()
-
-    def open_request(request, timeout):
-        attempts.append(request)
-        if len(attempts) == 1:
-            raise urllib.error.HTTPError(request.full_url, 429, "busy", {}, io.BytesIO())
-        return Response()
-
-    gate = Gate()
-    monkeypatch.setattr("urllib.request.urlopen", open_request)
-    monkeypatch.setattr("time.sleep", lambda seconds: None)
-
-    ask_parallel({"questions": {}}, key="secret", attempts=2, gate=gate)
-
-    assert gate.calls == 2
-    assert attempts[0].full_url.endswith("/v4/ai/evaluation-model")
-    assert json.loads(attempts[0].data) == {"questions": {}}
-    assert attempts[0].headers["Ai-gateway-protocol-version"] == "0.0.1"

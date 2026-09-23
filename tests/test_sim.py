@@ -1,11 +1,10 @@
 import math
 import random
-import threading
-import time
 import json
 
 from jevchess.records import RecordStore, replay_record
-from jevchess.sim import run_matches, sample_move
+from jevchess.game import Game
+from jevchess.sim import choose_sampled_moves, run_matches, sample_move
 
 
 def test_sample_move_is_seeded_and_always_legal():
@@ -27,26 +26,44 @@ def test_sample_move_falls_back_to_a_seeded_legal_choice():
     assert move in legal
 
 
-def test_parallel_matches_save_exact_ply_limited_games(tmp_path):
-    active = 0
-    peak = 0
-    lock = threading.Lock()
+def test_multiple_games_are_chosen_in_one_gateway_request():
+    games = {10: Game(None), 11: Game(None)}
+    randoms = {seed: random.Random(seed) for seed in games}
+    requests = []
 
-    def choose(game, rng):
-        nonlocal active, peak
-        with lock:
-            active += 1
-            peak = max(peak, active)
-        time.sleep(0.02)
-        move = rng.choice(list(game.board.legal_moves)).uci()
-        with lock:
-            active -= 1
-        return move, {"input_tokens": 1}
+    def answer(body, key=None):
+        requests.append(body)
+        return {
+            "answers": {
+                name: {"choice": "e2e4"}
+                for name in body["questions"]
+            },
+            "usage": {"inputTokens": 100},
+        }
+
+    choices = choose_sampled_moves(games, randoms, ask_fn=answer)
+
+    assert len(requests) == 1
+    assert set(requests[0]["state"]["games"]) == {"10", "11"}
+    assert set(requests[0]["questions"]) == {"game_10", "game_11"}
+    assert choices[10][0] == "e2e4"
+    assert choices[11][0] == "e2e4"
+
+
+def test_parallel_matches_save_exact_ply_limited_games(tmp_path):
+    batches = []
+
+    def choose(games, randoms):
+        batches.append(tuple(games))
+        return {
+            seed: (randoms[seed].choice(list(game.board.legal_moves)).uci(), {"input_tokens": 1})
+            for seed, game in games.items()
+        }
 
     store = RecordStore(tmp_path)
-    rows = run_matches(count=4, workers=4, max_plies=2, store=store, chooser=choose, seeds=range(10, 14))
+    rows = run_matches(count=4, max_plies=2, store=store, chooser=choose, seeds=range(10, 14))
 
-    assert peak > 1
+    assert batches == [(10, 11, 12, 13), (10, 11, 12, 13)]
     assert [row["seed"] for row in rows] == [10, 11, 12, 13]
     assert all(row["plies"] == 2 for row in rows)
     assert all(row["result"] == "1/2-1/2" for row in rows)

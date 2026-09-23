@@ -12,7 +12,6 @@ from jevchess.sim import run_matches
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--games", type=int, default=16)
-    parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--max-plies", type=int, default=160)
     parser.add_argument("--first-seed", type=int, default=1000)
     parser.add_argument("--records", default="results/jev-vs-jev-games")
@@ -25,7 +24,6 @@ def main():
 
     rows = run_matches(
         count=args.games,
-        workers=args.workers,
         max_plies=args.max_plies,
         store=RecordStore(args.records),
         seeds=range(args.first_seed, args.first_seed + args.games),
@@ -33,7 +31,6 @@ def main():
     )
     summary = {
         "games": len(rows),
-        "workers": args.workers,
         "first_seed": args.first_seed,
         "max_plies": args.max_plies,
         "elapsed_seconds": round(time.perf_counter() - started, 3),
