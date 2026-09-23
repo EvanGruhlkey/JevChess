@@ -14,7 +14,7 @@ def jev_turn():
     return game
 
 
-def test_request_contains_position_history_and_every_legal_move():
+def test_request_contains_position_and_every_legal_move():
     game = jev_turn()
 
     body = request_body(game)
@@ -23,7 +23,6 @@ def test_request_contains_position_history_and_every_legal_move():
     assert body["state"] == {
         "fen": game.board.fen(),
         "side_to_move": "black",
-        "move_history": ["e2e4"],
     }
     assert question["type"] == "choice"
     assert question["instructions"] == "Choose the strongest move."

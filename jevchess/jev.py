@@ -19,7 +19,6 @@ def request_body(game):
         "state": {
             "fen": game.board.fen(),
             "side_to_move": COLORS[game.board.turn],
-            "move_history": [move["uci"] for move in game.moves],
         },
         "questions": {
             "move": {
