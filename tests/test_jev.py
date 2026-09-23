@@ -25,7 +25,20 @@ def test_request_contains_position_history_and_every_legal_move():
     assert body["state"]["move_history"] == "1. e4"
     assert question["type"] == "choice"
     assert set(question["criteria"]) == set(game.state()["legal_moves"])
-    assert question["criteria"]["e7e5"] == "e5"
+    e5 = question["criteria"]["e7e5"]
+    assert e5.startswith("e5. Resulting FEN: rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2.")
+    assert "Material: even." in e5
+    assert "White has 29 legal replies." in e5
+
+
+def test_request_describes_forcing_replies_and_hanging_piece():
+    game = Game("white", fen="4kr2/8/8/8/8/8/5Q2/6K1 b - - 0 1")
+
+    description = request_body(game)["questions"]["move"]["criteria"]["f8f2"]
+
+    assert "Material: captures a queen (+9)." in description
+    assert "Forcing replies:" in description
+    assert "Kxf2 captures the moved rook" in description
 
 
 def test_choice_response_returns_only_the_supplied_move():
@@ -101,4 +114,3 @@ def test_gateway_retries_transient_error(monkeypatch):
     assert result["answers"]["move"]["choice"] == "e7e5"
     assert len(attempts) == 2
     assert attempts[0].headers["Authorization"] == "Bearer secret"
-
