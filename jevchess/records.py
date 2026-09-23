@@ -23,6 +23,7 @@ class RecordStore:
             "created_at": game.created_at,
             "initial_fen": game.initial_fen,
             "time_control": game.time_control,
+            "mode": game.mode,
             "players": dict(game.players),
             "moves": list(game.moves),
             "clock_history": list(game.clock_history),

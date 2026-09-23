@@ -65,6 +65,27 @@ def test_jev_move_is_applied_once_and_saves_metadata(tmp_path):
     assert record["jev"] == [{"input_tokens": 19}]
 
 
+def test_jev_vs_jev_alternates_sides_and_saves_both_players(tmp_path):
+    choices = iter(["e2e4", "e7e5"])
+
+    def choose(game):
+        return next(choices), {"side": "white" if game.board.turn else "black"}
+
+    client = app_client(tmp_path, choose)
+    response = client.post("/api/games", json={"mode": "jev-vs-jev"})
+    game = response.get_json()
+
+    white = client.post(f"/api/games/{game['id']}/jev", json={"ply": 0})
+    black = client.post(f"/api/games/{game['id']}/jev", json={"ply": 1})
+
+    assert response.status_code == 201
+    assert white.get_json()["moves"][-1]["uci"] == "e2e4"
+    assert black.get_json()["moves"][-1]["uci"] == "e7e5"
+    record = json.loads((tmp_path / f"{game['id']}.json").read_text())
+    assert record["players"] == {"white": "Jev", "black": "Jev"}
+    assert record["mode"] == "jev-vs-jev"
+
+
 @pytest.mark.parametrize("failure", [OSError("gateway unavailable"), KeyError("AI_GATEWAY_API_KEY")])
 def test_jev_failure_does_not_change_the_game(tmp_path, failure):
     def fail(game):

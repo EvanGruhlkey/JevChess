@@ -28,6 +28,30 @@ def test_new_game_exposes_authoritative_position():
     assert state["status"] == "playing"
 
 
+def test_spectator_game_allows_jev_to_play_both_colors():
+    game = Game(None)
+
+    game.play("e2e4", "jev-white")
+    game.play("e7e5", "jev-black")
+
+    state = game.state()
+    assert state["mode"] == "jev-vs-jev"
+    assert state["human_color"] is None
+    assert state["jev_color"] is None
+    assert state["moves"] == [
+        {"uci": "e2e4", "san": "e4"},
+        {"uci": "e7e5", "san": "e5"},
+    ]
+    assert game.players == {"white": "Jev", "black": "Jev"}
+
+
+def test_spectator_game_rejects_jev_for_the_wrong_color():
+    game = Game(None)
+
+    with pytest.raises(GameError, match="turn"):
+        game.play("e7e5", "jev-black")
+
+
 def test_move_records_uci_and_san_and_changes_turn():
     game = Game("white")
 
@@ -104,4 +128,3 @@ def test_clock_moves_to_the_next_player_and_flags_expired_side():
     assert state["status"] == "finished"
     assert state["result"] == "1-0"
     assert state["termination"] == "time forfeit"
-

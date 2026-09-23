@@ -46,7 +46,11 @@ def create_app(records="results/games", choose_fn=None, game_factory=Game):
 
     @app.post("/api/games")
     def new_game():
-        color = body().get("color", "white")
+        data = body()
+        mode = data.get("mode", "human-vs-jev")
+        if mode not in ("human-vs-jev", "jev-vs-jev"):
+            return jsonify(error="Unknown game mode"), 400
+        color = None if mode == "jev-vs-jev" else data.get("color", "white")
         try:
             game = game_factory(color)
         except GameError as error:
@@ -80,14 +84,16 @@ def create_app(records="results/games", choose_fn=None, game_factory=Game):
         with locks[game_id]:
             data = body()
             ensure_ply(game, data.get("ply"))
-            if game.status != "playing" or COLORS[game.board.turn] != game.jev_color:
+            color = COLORS[game.board.turn]
+            if game.status != "playing" or (game.mode != "jev-vs-jev" and color != game.jev_color):
                 raise GameError("It is not Jev's turn")
             try:
                 move, metadata = chooser(game)
             except (GameError, KeyError, OSError, TimeoutError) as error:
                 app.logger.warning("Jev move failed: %s", error)
                 return jsonify(error="Jev could not choose a move", retryable=True), 503
-            game.play(move, "jev")
+            actor = f"jev-{color}" if game.mode == "jev-vs-jev" else "jev"
+            game.play(move, actor)
             game.jev_metadata.append(metadata)
             save(game)
             return jsonify(game.state())

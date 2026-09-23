@@ -17,15 +17,21 @@ class GameError(ValueError):
 
 class Game:
     def __init__(self, human_color, seconds=600, fen=chess.STARTING_FEN, now=time.monotonic, players=None):
-        if human_color not in COLOR_VALUES:
+        if human_color is not None and human_color not in COLOR_VALUES:
             raise GameError("Color must be white or black")
         self.board = chess.Board(fen)
         self.id = uuid.uuid4().hex
         self.created_at = datetime.now(timezone.utc).isoformat()
         self.initial_fen = fen
         self.human_color = human_color
-        self.jev_color = COLORS[not COLOR_VALUES[human_color]]
-        self.players = players or {self.human_color: "Human", self.jev_color: "Jev"}
+        self.mode = "jev-vs-jev" if human_color is None else "human-vs-jev"
+        self.jev_color = None if human_color is None else COLORS[not COLOR_VALUES[human_color]]
+        default_players = (
+            {"white": "Jev", "black": "Jev"}
+            if human_color is None
+            else {self.human_color: "Human", self.jev_color: "Jev"}
+        )
+        self.players = players or default_players
         self.moves = []
         self.clock_history = []
         self.jev_metadata = []
@@ -45,6 +51,8 @@ class Game:
             return self.human_color
         if actor == "jev":
             return self.jev_color
+        if actor in ("jev-white", "jev-black"):
+            return actor.removeprefix("jev-")
         raise GameError("Unknown player")
 
     def _settle_clock(self):
@@ -113,6 +121,7 @@ class Game:
             "id": self.id,
             "fen": self.board.fen(),
             "turn": turn,
+            "mode": self.mode,
             "human_color": self.human_color,
             "jev_color": self.jev_color,
             "legal_moves": [] if self.result else [move.uci() for move in self.board.legal_moves],
