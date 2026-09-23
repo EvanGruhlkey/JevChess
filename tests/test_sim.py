@@ -70,5 +70,7 @@ def test_parallel_matches_save_exact_ply_limited_games(tmp_path):
     assert all(row["termination"] == "2-ply limit" for row in rows)
     for row in rows:
         data = json.loads((tmp_path / f"{row['id']}.json").read_text())
+        assert data["seed"] == row["seed"]
+        assert data["time_control"] == 1_000_000_000
         assert replay_record(data)[-1]["result"] == "1/2-1/2"
         assert (tmp_path / f"{row['id']}.pgn").exists()

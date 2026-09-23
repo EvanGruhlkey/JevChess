@@ -12,7 +12,7 @@ from jevchess.sim import run_matches
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--games", type=int, default=16)
-    parser.add_argument("--max-plies", type=int, default=160)
+    parser.add_argument("--max-plies", type=int, default=80)
     parser.add_argument("--first-seed", type=int, default=1000)
     parser.add_argument("--records", default="results/jev-vs-jev-games")
     parser.add_argument("--output", default="results/jev-vs-jev.json")

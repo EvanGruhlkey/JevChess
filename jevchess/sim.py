@@ -60,13 +60,15 @@ def choose_sampled_moves(games, randoms, ask_fn=ask):
     return choices
 
 
-def run_matches(count=16, max_plies=160, store=None, chooser=choose_sampled_moves,
+def run_matches(count=16, max_plies=80, store=None, chooser=choose_sampled_moves,
                 seeds=None, progress=None):
     store = store or RecordStore("results/jev-vs-jev-games")
     seeds = list(range(count)) if seeds is None else list(seeds)
     if len(seeds) != count:
         raise ValueError("Seed count must match game count")
-    games = {seed: Game(None, seconds=3600) for seed in seeds}
+    games = {seed: Game(None, seconds=1_000_000_000) for seed in seeds}
+    for seed, game in games.items():
+        game.seed = seed
     randoms = {seed: random.Random(seed) for seed in seeds}
     started = time.perf_counter()
     for game in games.values():

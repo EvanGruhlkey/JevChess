@@ -18,7 +18,7 @@ class RecordStore:
         self.directory.mkdir(parents=True, exist_ok=True)
 
     def data(self, game):
-        return {
+        data = {
             "id": game.id,
             "created_at": game.created_at,
             "initial_fen": game.initial_fen,
@@ -33,6 +33,9 @@ class RecordStore:
             "result": game.result,
             "termination": game.termination,
         }
+        if hasattr(game, "seed"):
+            data["seed"] = game.seed
+        return data
 
     def save(self, game):
         path = self.directory / f"{game.id}.json"
