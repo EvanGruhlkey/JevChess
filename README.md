@@ -1,13 +1,15 @@
-<h1 align="center">Human vs Jev: Chess</h1>
+<h1 align="center">Jev Chess</h1>
 
-<p align="center">A human and TypeSafe AI's Jev play a complete game of chess from the same legal position.</p>
+<p align="center">Play a complete game against Jev, or watch seeded Jev-vs-Jev matches unfold from Python.</p>
+
+![Sixteen simultaneous Jev vs Jev chess games](media/jev-vs-jev.gif)
 
 ## How it works
 
 1. **Board.** Python owns the position, legal moves, clocks and result. [`python-chess`](https://python-chess.readthedocs.io/) handles the rules; the browser only draws the state it receives.
 2. **Human.** Choose White or Black, then click a piece and one of its marked legal squares. Castling, en passant and promotion go through the same move validator as every other move.
-3. **Question.** On Jev's turn the game sends its current FEN, side to move, move history and the complete set of legal moves to the Vercel AI Gateway.
-4. **Choice.** Each legal UCI move is one choice, with its SAN form as context. Jev must select one of those choices and Python checks it again before changing the board.
+3. **Question.** On Jev's turn the game sends its current FEN, side to move and the complete set of legal UCI moves to the Vercel AI Gateway.
+4. **Choice.** Every legal move is a named choice. Jev can only select one of them, and Python checks the move again before changing the board.
 5. **Record.** The game writes JSON after every move. A finished game also becomes PGN. Replays rebuild the position one legal move at a time and reject a changed SAN, final FEN or result.
 6. **Interface.** Flask serves a small HTML, CSS and JavaScript board. It shows both clocks, whose turn it is, the move list, check, the last move and Jev's thinking or retry state.
 
@@ -18,16 +20,26 @@ flowchart LR
   H[Human move in browser or terminal] --> G[Python game]
   G --> L[Legal move validation]
   L --> R[JSON and PGN record]
-  G --> Q[FEN, history and every legal move]
+  G --> Q[FEN, side and every legal move]
   Q --> J[Jev through Vercel AI Gateway]
   J --> V[Selected UCI move validated again]
   V --> G
   G --> U[Browser state: board, clocks and moves]
+  S[Seeded Jev vs Jev runner] --> Q
+  R --> P[Python GIF renderer]
 ```
 
-The browser never decides whether a move is legal. The same game, Jev client and record writer are used by the terminal script and the web server.
+The browser never decides whether a move is legal. The terminal, web server and simulation runner share the same Python game, Jev client and record writer. Simulation rounds send all active positions in one request, then use a deterministic seed to sample each returned legal-move distribution.
 
 ## Results
+
+The demo ran 16 seeded Jev-vs-Jev games to checkmate or an 80-ply display cap. Two games ended in checkmate and every saved move replays exactly.
+
+| Games | White wins | Black wins | 80-ply draws | Checkmate lengths |
+| ---: | ---: | ---: | ---: | --- |
+| 16 | 2 | 0 | 14 | 57, 77 plies |
+
+The exact summary is in [`results/jev-vs-jev.json`](results/jev-vs-jev.json), with a JSON replay and PGN for every board in [`results/jev-vs-jev-games/`](results/jev-vs-jev-games/).
 
 Jev played two games against each Elo-limited Stockfish 19 opponent, once with each color. Stockfish used 0.1 seconds per move. Every game ended by checkmate.
 
@@ -46,7 +58,12 @@ python scripts/benchmark.py path/to/stockfish
 
 ## Demo
 
-No demo video has been recorded yet. The browser board runs locally with the commands below.
+The GIF above is rendered entirely in Python from the 16 exact JSON replays. All boards share a ply counter; completed games stop moving while the others continue. Rebuild both the games and GIF with:
+
+```bash
+python scripts/simulate.py
+python scripts/render_simulation.py
+```
 
 ## Run it
 
@@ -85,10 +102,11 @@ python scripts/export_results.py
 
 | Folder | What's in it |
 | --- | --- |
-| [`jevchess/`](jevchess/) | authoritative game state, Jev's legal-choice request, saved records and Flask API |
-| [`scripts/`](scripts/) | terminal play, local server, exact replay and result export commands |
+| [`jevchess/`](jevchess/) | game state, Jev players, simulation, saved records, renderer and Flask API |
+| [`scripts/`](scripts/) | play, serve, simulate, render, replay, benchmark and export commands |
 | [`web/`](web/) | the thin browser board, styles and interaction code |
 | [`results/`](results/) | saved JSON games, PGNs and generated summaries |
+| [`media/`](media/) | the rendered Jev-vs-Jev demo |
 | [`tests/`](tests/) | rules, clocks, Jev responses, persistence, replay, scripts and API behavior |
 
 ## Credits
