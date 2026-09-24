@@ -1,6 +1,6 @@
 <h1 align="center">Jev Chess</h1>
 
-<p align="center">Play a complete game against Jev, or watch seeded Jev-vs-Jev matches unfold from Python.</p>
+<p align="center">Play a complete game against Jev, or watch Jev-vs-Jev matches unfold</p>
 
 ![Sixteen simultaneous Jev vs Jev chess games](media/jev-vs-jev.gif)
 
