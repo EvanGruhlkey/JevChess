@@ -54,11 +54,11 @@ Jev played two games against each Elo-limited Stockfish 19 opponent, once with e
 
 This small run shows Jev below the tested 1350 setting; it is not enough games to assign a precise rating. The complete benchmark summary is in [`results/stockfish-benchmark.json`](results/stockfish-benchmark.json). Run another matrix with:
 
-This is probably not an ideal use case for Jev. The current setup asks it to choose from the legal moves in one position, while strong chess play depends on searching ahead through many possible replies and counter-replies. The experiment is useful for testing constrained legal choices, but it is not a replacement for a chess engine's search tree.
-
 ```bash
 python scripts/benchmark.py path/to/stockfish
 ```
+
+This is probably not an ideal use case for Jev. The current setup asks it to choose from the legal moves in one position, while strong chess play depends on searching ahead through many possible replies and counter-replies. The experiment is useful for testing constrained legal choices, but it is not a replacement for a chess engine's search tree.
 
 ## Demo
 
