@@ -1,0 +1,12 @@
+[Event "Human vs Jev"]
+[Site "Local"]
+[Date "2026.09.23"]
+[Round "-"]
+[White "Jev"]
+[Black "Jev"]
+[Result "1/2-1/2"]
+[GameId "e9977ea072b94620a218933f00be052f"]
+[TimeControl "1000000000"]
+[Termination "80-ply limit"]
+
+1. e4 e5 2. Nf3 Nf6 3. Nc3 Nxe4 4. d4 Nc6 5. Bf4 Nd6 6. Bb5 Nxb5 7. O-O Nb8 8. Nxb5 Bd6 9. c4 O-O 10. Nxe5 Ba3 11. Nd6 c5 12. Ne8 g5 13. Bxg5 d6 14. h3 b5 15. Bh6 cxd4 16. Bg7 Qg5 17. Nxd6 Qh6 18. Bh8 bxc4 19. Ndxc4 Be7 20. Ne3 Bxh3 21. Nc6 Qe6 22. Qh5 Qc8 23. Qxh3 d3 24. Rfd1 Qf5 25. Qxh7+ Qxh7 26. Nd8 Qf5 27. f4 Kh7 28. Be5 Qe6 29. Nb7 Bc5 30. Rf1 Ba3 31. Bc7 Qc8 32. Rab1 Bd6 33. Nd5 Qg4 34. Na5 Bc5+ 35. Ne3 Qg8 36. Bd6 Ba3 37. Rfd1 Bxb2 38. f5 Rc8 39. Rbc1 Be5 40. Nd5 Rc2 1/2-1/2

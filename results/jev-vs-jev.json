@@ -1,0 +1,123 @@
+{
+  "games": 16,
+  "first_seed": 1000,
+  "max_plies": 80,
+  "elapsed_seconds": 1027.96,
+  "white_wins": 2,
+  "black_wins": 0,
+  "draws": 14,
+  "games_detail": [
+    {
+      "id": "e9977ea072b94620a218933f00be052f",
+      "seed": 1000,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "11efad66db7c4d00a8a51e90bbe85f09",
+      "seed": 1001,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "6c01b7f4b4474f26905db3b6208884d2",
+      "seed": 1002,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "91489cb55b0e48879a3fe5025d353db0",
+      "seed": 1003,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "c40a281b858543639e9209ef4dd461b1",
+      "seed": 1004,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "fcfdc19feaec41f79ee5c686c2d4e638",
+      "seed": 1005,
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 77
+    },
+    {
+      "id": "42fce737c8984eb9b894f015544bac35",
+      "seed": 1006,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "3a4d3c9046084a6c830a46d116cbedee",
+      "seed": 1007,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "8b6693bce5be4978a156d0b63971d90c",
+      "seed": 1008,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "475c7c05d2a146f089529078e582d33f",
+      "seed": 1009,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "cddc42239a1147dcb9d18e9296f5084a",
+      "seed": 1010,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "8625722dbdeb4aa2b3f0911d4f909302",
+      "seed": 1011,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "5cbde52c460e40f586251929a364140b",
+      "seed": 1012,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "aac3c257df68401c9daed9e3eebdef9a",
+      "seed": 1013,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    },
+    {
+      "id": "84d88c6c164047448688698de5d300b1",
+      "seed": 1014,
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 57
+    },
+    {
+      "id": "77e3ea5d5cea41ff8b26e925a18181aa",
+      "seed": 1015,
+      "result": "1/2-1/2",
+      "termination": "80-ply limit",
+      "plies": 80
+    }
+  ]
+}
