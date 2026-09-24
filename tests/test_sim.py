@@ -74,3 +74,57 @@ def test_parallel_matches_save_exact_ply_limited_games(tmp_path):
         assert data["time_control"] == 1_000_000_000
         assert replay_record(data)[-1]["result"] == "1/2-1/2"
         assert (tmp_path / f"{row['id']}.pgn").exists()
+
+
+def test_matches_resume_seeded_games_from_saved_moves(tmp_path):
+    store = RecordStore(tmp_path)
+    game = Game(None, seconds=1_000_000_000)
+    game.seed = 23
+    probabilities = {move.uci(): 1.0 for move in game.board.legal_moves}
+    rng = random.Random(23)
+    move = sample_move(probabilities, [move.uci() for move in game.board.legal_moves], rng)
+    game.play(move, "jev-white")
+    game.jev_metadata.append({"input_tokens": 1, "probabilities": probabilities})
+    store.save(game)
+
+    def choose(games, randoms):
+        return {
+            seed: (sample_move({move.uci(): 1 for move in current.board.legal_moves},
+                               [move.uci() for move in current.board.legal_moves], randoms[seed]),
+                   {"input_tokens": 1, "probabilities": {move.uci(): 1 for move in current.board.legal_moves}})
+            for seed, current in games.items()
+        }
+
+    rows = run_matches(count=1, max_plies=2, store=store, chooser=choose, seeds=[23])
+
+    assert rows[0]["id"] == game.id
+    assert rows[0]["plies"] == 2
+    assert len(list(tmp_path.glob("*.json"))) == 1
+
+
+def test_gateway_failures_retry_without_losing_the_round(tmp_path):
+    calls = 0
+    delays = []
+
+    def choose(games, randoms):
+        nonlocal calls
+        calls += 1
+        if calls < 3:
+            raise OSError("gateway unavailable")
+        return {
+            seed: (next(iter(game.board.legal_moves)).uci(), {"input_tokens": 1})
+            for seed, game in games.items()
+        }
+
+    rows = run_matches(
+        count=1,
+        max_plies=1,
+        store=RecordStore(tmp_path),
+        chooser=choose,
+        seeds=[30],
+        sleep=delays.append,
+    )
+
+    assert calls == 3
+    assert delays == [1, 2]
+    assert rows[0]["plies"] == 1

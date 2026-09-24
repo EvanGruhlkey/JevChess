@@ -22,12 +22,16 @@ def main():
     def report(done, total, row, elapsed):
         print(f"{done}/{total} seed {row['seed']}: {row['result']} in {row['plies']} plies ({elapsed:.1f}s)", flush=True)
 
+    def report_retry(attempt, delay, error):
+        print(f"Gateway unavailable ({error}); retrying in {delay}s", flush=True)
+
     rows = run_matches(
         count=args.games,
         max_plies=args.max_plies,
         store=RecordStore(args.records),
         seeds=range(args.first_seed, args.first_seed + args.games),
         progress=report,
+        retry=report_retry,
     )
     summary = {
         "games": len(rows),

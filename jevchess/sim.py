@@ -1,5 +1,6 @@
 """Concurrent, reproducible Jev-vs-Jev chess matches."""
 
+import json
 import math
 import random
 import time
@@ -60,24 +61,99 @@ def choose_sampled_moves(games, randoms, ask_fn=ask):
     return choices
 
 
+def _saved_games(store, seeds):
+    wanted = set(seeds)
+    saved = {}
+    for path in store.directory.glob("*.json"):
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+            seed = record["seed"]
+        except (OSError, ValueError, KeyError):
+            continue
+        if seed in wanted and (
+            seed not in saved or len(record.get("moves", [])) > len(saved[seed].get("moves", []))
+        ):
+            saved[seed] = record
+    return saved
+
+
+def _restore_game(record, rng):
+    game = Game(
+        None,
+        seconds=1_000_000_000,
+        fen=record["initial_fen"],
+        players=record.get("players"),
+    )
+    game.id = record["id"]
+    game.created_at = record["created_at"]
+    game.seed = record["seed"]
+    metadata = record.get("jev", [])
+    if len(metadata) != len(record.get("moves", [])):
+        raise ValueError(f"Saved game {game.id} is missing Jev move data")
+    for item, details in zip(record["moves"], metadata):
+        legal = [move.uci() for move in game.board.legal_moves]
+        expected = sample_move(details.get("probabilities", {}), legal, rng)
+        if expected != item["uci"]:
+            raise ValueError(f"Saved game {game.id} cannot resume from its seed")
+        color = COLORS[game.board.turn]
+        game.play(item["uci"], f"jev-{color}")
+        game.jev_metadata.append(details)
+    if record.get("status") == "finished":
+        game.result = record.get("result")
+        game.termination = record.get("termination")
+    return game
+
+
 def run_matches(count=16, max_plies=80, store=None, chooser=choose_sampled_moves,
-                seeds=None, progress=None):
+                seeds=None, progress=None, sleep=time.sleep, retry=None):
     store = store or RecordStore("results/jev-vs-jev-games")
     seeds = list(range(count)) if seeds is None else list(seeds)
     if len(seeds) != count:
         raise ValueError("Seed count must match game count")
-    games = {seed: Game(None, seconds=1_000_000_000) for seed in seeds}
-    for seed, game in games.items():
-        game.seed = seed
     randoms = {seed: random.Random(seed) for seed in seeds}
+    saved = _saved_games(store, seeds)
+    games = {}
+    for seed in seeds:
+        if seed in saved:
+            games[seed] = _restore_game(saved[seed], randoms[seed])
+        else:
+            games[seed] = Game(None, seconds=1_000_000_000)
+            games[seed].seed = seed
     started = time.perf_counter()
-    for game in games.values():
-        store.save(game)
+    for seed, game in games.items():
+        if seed not in saved:
+            store.save(game)
 
     rows = []
-    active = dict(games)
+    active = {}
+    for seed, game in games.items():
+        if game.status == "playing" and len(game.moves) < max_plies:
+            active[seed] = game
+            continue
+        if game.status == "playing":
+            game.result = "1/2-1/2"
+            game.termination = f"{max_plies}-ply limit"
+            store.finish(game)
+        rows.append({
+            "id": game.id,
+            "seed": seed,
+            "result": game.result,
+            "termination": game.termination,
+            "plies": len(game.moves),
+        })
+
+    failures = 0
     while active:
-        choices = chooser(active, randoms)
+        try:
+            choices = chooser(active, randoms)
+        except (OSError, TimeoutError) as error:
+            failures += 1
+            delay = min(60, 2 ** (min(failures, 6) - 1))
+            if retry:
+                retry(failures, delay, error)
+            sleep(delay)
+            continue
+        failures = 0
         if set(choices) != set(active):
             raise ValueError("Chooser must answer every active game")
         for seed, game in list(active.items()):
